@@ -48,14 +48,14 @@ def Admin(request):
 
         # Redirect or display a success message
         return redirect('medecin')  # Replace 'medecin' with your URL name or template
-    if request.method == "POST" and request.POST.get('role') == 'infermier':
+    if request.method == "POST" and request.POST.get('role') == 'infirmier':
         nom = request.POST.get('nom')
         prenom = request.POST.get('prenom')
         email = request.POST.get('email')
         password = request.POST.get('password')
 
         # Create a new Medecin instance
-        Infermier.objects.create(
+        Infirmier.objects.create(
             nom=nom,
             prenom=prenom,
             email=email,
@@ -63,7 +63,7 @@ def Admin(request):
         )
 
         # Redirect or display a success message
-        return redirect('infermier')  # Replace 'medecin' with your URL name or template
+        return redirect('infirmier')  # Replace 'medecin' with your URL name or template
     if request.method == "POST" and request.POST.get('role') == 'laborantin':
         nom = request.POST.get('nom')
         prenom = request.POST.get('prenom')
@@ -103,14 +103,18 @@ def home(request):
  return render(request,'home.html')
 def success(request):
  return render(request, 'create_patient.html')
+def patient(request):
+ return render(request,"patient.html")
 def medecin(request):
  return render(request,"medecin.html")
-def infermier(request):
- return render(request,"infermier.html")
+def Infirmier(request):
+ return render(request,"infirmier.html")
 def laborantin(request):
  return render(request,"laborantin.html")
 def radiologue(request):
  return render(request,"radiologue.html")
+def technicien(request):
+ return render(request,"technicien.html")
 def error(request):
  return render(request,"error404.html")
 
@@ -141,12 +145,12 @@ def authentification(request):
               return redirect('medecin')
          except Medecin.DoesNotExist:
               return redirect('error')
-        elif role == 'infermier':
+        elif role == 'infirmier':
          try:
-           user = Infermier.objects.get(email=username) 
+           user = Infirmier.objects.get(email=username) 
            if user.email == username and user.password == password :
-              return redirect('infermier')
-         except Infermier.DoesNotExist:
+              return redirect('infirmier')
+         except Infirmier.DoesNotExist:
               return redirect('error')
         elif role == 'laborantin':
          try:
@@ -160,6 +164,13 @@ def authentification(request):
            user = Radiologue.objects.get(email=username) 
            if user.email == username and user.password == password :
               return redirect('radiologue')
+         except Radiologue.DoesNotExist:
+              return redirect('error')
+        elif role == 'technicien':
+         try:
+            user = technicien.objects.get(email=username) 
+            if user.email == username and user.password == password :
+              return redirect('technicien')
          except Radiologue.DoesNotExist:
               return redirect('error')
 

@@ -2,12 +2,12 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Patient(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="patient", default=6)
-    nss = models.BigIntegerField(primary_key=True, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="patient_app", default=6)
+    nss = models.BigIntegerField(primary_key=True, unique=True, default=0)
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     date_naissance = models.DateField()
-    adresse = models.CharField(max_length=200)
+    adresse = models.CharField(max_length=200 , default="Unknown")
     num_telephone = models.BigIntegerField(unique=True, default="Unknown")
     mutuelle = models.IntegerField(default="Unknown")
     medecin_trataint = models.CharField(max_length=100, default="Unknown")
@@ -18,7 +18,7 @@ class Patient(models.Model):
         return f"{self.nom} {self.prenom}"
 
 class Medecin(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medecin", null=False, default=1)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medecin_app", null=False, default=1)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
@@ -35,12 +35,11 @@ class Medecin(models.Model):
     def __str__(self):
         return f"{self.nom} {self.prenom}"
 
-class Infermier(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="infermier", default=2)
+class Infirmier(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="infirmier_app", default=2)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
-    prenom = models.CharField(max_length=50)
-
+    prenom = models.CharField(max_length=50) 
     def saisir_observations(self, nss: str):
         pass
 
@@ -48,16 +47,19 @@ class Infermier(models.Model):
         return f"{self.nom} {self.prenom}"
 
 class Laborantin(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="laborantin", default=3)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="laborantin_app", default=3)
     id = models.AutoField(primary_key=True)
-    nom = models.CharField(max_length=50)
-    prenom = models.CharField(max_length=50)
+   
+
+    class Meta:
+        verbose_name = "Laborantin"
+        verbose_name_plural = "Laborantins"
 
     def __str__(self):
         return f"{self.nom} {self.prenom}"
 
 class Radiologue(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="radiologue", default=4)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="radiologue_app", default=4)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
@@ -69,7 +71,7 @@ class Radiologue(models.Model):
         return f"{self.nom} {self.prenom}"
 
 class Technicien(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="technicien", default=5)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="technicien_app", default=5)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)

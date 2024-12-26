@@ -8,9 +8,11 @@ urlpatterns = [
     path('Admin/', views.Admin, name='Admin') , 
     path('authentification/', views.authentification, name='authentifications'),
     path('medecin/', views.medecin, name='medecin') , 
-    path('infirmier/', views.infirmier, name='infirmier') , 
+    path('infirmier/', views.Infirmier, name='infrimier') , 
     path('laborantin/', views.laborantin, name='laborantin') , 
     path('radiologue/', views.radiologue, name='radiologue') , 
+    path('patient/', views.patient, name='patient') , 
+    path('technicien/', views.technicien, name='technicien') , 
     path('error/', views.error, name='error') ,
 
 

@@ -365,15 +365,14 @@ class CertificatMedical(models.Model):
     def __str__(self):
         return f"Certificat Medical du {self.date_emission}"
     
-class Infermier(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="infermier",default=2)
+class Infirmier(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="infirmier",default=2)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
-
     class Meta:
-        verbose_name = "Infermier"
-        verbose_name_plural = "Infermiers"
+        verbose_name = "infrimier"
+        verbose_name_plural = "infirmiers"
 
     def saisir_observations(self, nss: str):
         
@@ -394,7 +393,7 @@ class Infermier(models.Model):
     def prenom(self, value):
         self._prenom = value
     def __str__(self):
-        return f"Infermier {self.nom} - {self.prenom}"
+        return f"infirmier {self.nom} - {self.prenom}"
     
 class Medecin(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medecin",null=False, default=1)

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.permissions import BasePermission
-from .models import Patient,Infermier,Medecin,Pharmacien,Radiologue,Technicien
+from .models import Patient,Infirmier,Medecin,Pharmacien,Radiologue,Technicien
+from .serializers import ConsultationSerializer
 
 
 class MedecinSerializer(serializers.ModelSerializer):
@@ -15,15 +16,22 @@ class MedecinSerializer(serializers.ModelSerializer):
         return representation
 
 
-class InfermierSerializer(serializers.ModelSerializer):
+class InfirmierSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Infermier
+        model = Infirmier
         fields = '__all__'
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = '__all__'
+
+class PatientDetailSerializer(serializers.ModelSerializer):
+    consultations = ConsultationSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Patient
+        fields = ['id', 'nss', 'name', 'date_of_birth', 'address', 'phone', 'mutuelle', 'consultations']
 
 class PharmacienSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,7 +66,7 @@ class UserWithRoleSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'medecin'):
             return MedecinSerializer(obj.medecin).data
         elif hasattr(obj, 'infirmier'):
-            return InfermierSerializer(obj.infirmier).data
+            return InfirmierSerializer(obj.Infirmier).data
         # Ajoutez d'autres rôles si nécessaire
         return None
 
