@@ -48,14 +48,14 @@ def Admin(request):
 
         # Redirect or display a success message
         return redirect('medecin')  # Replace 'medecin' with your URL name or template
-    if request.method == "POST" and request.POST.get('role') == 'infirmier':
+    if request.method == "POST" and request.POST.get('role') == 'infermier':
         nom = request.POST.get('nom')
         prenom = request.POST.get('prenom')
         email = request.POST.get('email')
         password = request.POST.get('password')
 
         # Create a new Medecin instance
-        Infirmier.objects.create(
+        Infermier.objects.create(
             nom=nom,
             prenom=prenom,
             email=email,
@@ -63,7 +63,7 @@ def Admin(request):
         )
 
         # Redirect or display a success message
-        return redirect('infirmier')  # Replace 'medecin' with your URL name or template
+        return redirect('infermier')  # Replace 'medecin' with your URL name or template
     if request.method == "POST" and request.POST.get('role') == 'laborantin':
         nom = request.POST.get('nom')
         prenom = request.POST.get('prenom')
@@ -105,8 +105,8 @@ def success(request):
  return render(request, 'create_patient.html')
 def medecin(request):
  return render(request,"medecin.html")
-def infirmier(request):
- return render(request,"infirmier.html")
+def infermier(request):
+ return render(request,"infermier.html")
 def laborantin(request):
  return render(request,"laborantin.html")
 def radiologue(request):
@@ -141,12 +141,12 @@ def authentification(request):
               return redirect('medecin')
          except Medecin.DoesNotExist:
               return redirect('error')
-        elif role == 'infirmier':
+        elif role == 'infermier':
          try:
-           user = Infirmier.objects.get(email=username) 
+           user = Infermier.objects.get(email=username) 
            if user.email == username and user.password == password :
-              return redirect('infirmier')
-         except Infirmier.DoesNotExist:
+              return redirect('infermier')
+         except Infermier.DoesNotExist:
               return redirect('error')
         elif role == 'laborantin':
          try:
@@ -166,3 +166,4 @@ def authentification(request):
     return render(request, "authentification.html")
 
 # Create your views here.
+

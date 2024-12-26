@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views  # Import views from the current app
 
+app_name = 'backApp'
 urlpatterns = [
     path('', views.home, name='home'),  # Maps the root URL to the home view    
     path('success/', views.success, name='success'),
@@ -14,3 +15,4 @@ urlpatterns = [
 
 
 ]  
+
