@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class Patient(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="patient",default=6)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="b_patient",default=6)
     nss = models.BigIntegerField(primary_key=True,unique=True)
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
@@ -366,7 +366,7 @@ class CertificatMedical(models.Model):
         return f"Certificat Medical du {self.date_emission}"
     
 class Infirmier(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="infirmier",default=2)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="b_infirmier",default=2)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
@@ -396,7 +396,7 @@ class Infirmier(models.Model):
         return f"infirmier {self.nom} - {self.prenom}"
     
 class Medecin(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medecin",null=False, default=1)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="b_medecin",null=False, default=1)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
@@ -435,7 +435,7 @@ class Medecin(models.Model):
         return f"Dr {self.nom} - {self.prenom}"
     
 class Pharmacien(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="pharmacien",default=3)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="b_pharmacien",default=3)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
@@ -466,7 +466,7 @@ class Pharmacien(models.Model):
         return f"Pharmacien {self.nom} - {self.prenom}"
     
 class Radiologue(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="radiologue",default=4)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="b_radiologue",default=4)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
@@ -497,7 +497,7 @@ class Radiologue(models.Model):
         return f"Radiologue {self.nom} - {self.prenom}"
     
 class Technicien(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="technicien",default=5)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="b_technicien",default=5)
     id = models.AutoField(primary_key=True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
