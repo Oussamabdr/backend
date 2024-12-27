@@ -4,65 +4,49 @@ from django.contrib.auth.models import User
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
     num_securite_sociale = models.CharField(max_length=50)
-    nom = models.CharField(max_length=100)
-    prenom = models.CharField(max_length=100)
     date_naissance = models.DateField()
+    sexe = models.CharField(max_length=1,choices=[("M","Masculin"),("F","Feminin")],default="M")
     adress = models.CharField(max_length=255)
     telephone = models.CharField(max_length=15)
     medecin_traitant = models.CharField(max_length=100)
     personne_contact = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"{self.nom} {self.prenom} - NSS: {self.num_securite_sociale}"
+        return f"{self.user.first_name} {self.user.last_name} - NSS: {self.num_securite_sociale}"
 
 
 class Medecin(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
-    nom = models.CharField(max_length=100)
-    prenom = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100)
 
     def __str__(self):
-        return f"Dr. {self.nom} {self.prenom}"
+        return f"Dr. {self.user.first_name} {self.user.last_name}"
 
 class Pharmacien(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
-    nom = models.CharField(max_length=100)
-    prenom = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100)
 
     def __str__(self):
-        return f"Dr. {self.nom} {self.prenom}"
+        return f"Dr. {self.user.first_name} {self.user.last_name}"
 
 
 class Infirmier(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
-    nom = models.CharField(max_length=100)
-    prenom = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100)
 
     def __str__(self):
-        return f"{self.nom} {self.prenom}"
+        return f"{self.user.first_name} {self.user.last_name}"
 
 
 class Laborantin(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE) 
-    nom = models.CharField(max_length=100)
-    prenom = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100)
 
     def __str__(self):
-        return f"{self.nom} {self.prenom}"
+        return f"{self.user.first_name} {self.user.last_name}"
 
 
 class Radiologue(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
-    nom = models.CharField(max_length=100)
-    prenom = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100)
 
     def __str__(self):
-        return f"{self.nom} {self.prenom}"
+        return f"{self.user.first_name} {self.user.last_name}"
 
 
 class Consultation(models.Model):

@@ -5,8 +5,6 @@ from django.contrib.auth.models import User
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="patient",default=6)
     nss = models.BigIntegerField(primary_key=True,unique=True)
-    nom = models.CharField(max_length=100)
-    prenom = models.CharField(max_length=100)
     date_naissance = models.DateField()
     adresse = models.CharField(max_length=200)
     num_telephone = models.BigIntegerField(unique=True,default="Unknown")
