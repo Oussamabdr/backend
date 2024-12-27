@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import *
 
+
 def Admin(request):
     if request.method == "POST":
         role = request.POST.get('role')
@@ -111,7 +112,31 @@ def medecin(request):
     return render(request, "medecin.html")
 
 def infirmier(request):
+    if request.method == "POST":
+        type = request.POST.get('type')
+        date = request.POST.get('date')
+        description = request.POST.get('description')
+        observation = request.POST.get('observation')
+        nss = request.POST.get('nss')
+
+      
+        dossier = DossierPatient.objects.get(num_securite_sociale=nss)
+
+        
+        Soin.objects.create(
+            date=date,
+            type=type,
+            description=description,
+            observation=observation,
+            infirmier_id=request.user.infirmier, 
+            dossier_id=dossier.id,  
+        )
+
+        return redirect('soin_created')
     return render(request, "soins.html")
+
+def soinCreated(request):
+ return render(request, "soins_created.html")
 
 def laborantin(request):
     return render(request, "laborantin.html")
@@ -123,64 +148,51 @@ def error(request):
     return render(request, "error404.html")
 
 
-def create_soin(request):
-    if request.method == "POST":
-        type = request.POST.get('type')
-        date = request.POST.get('date')
-        description = request.POST.get('description')
-        observation = request.POST.get('observation')
-        nss = request.POST.get('nss')
-
-      
-        patient = Patient.objects.get(num_securite_sociale=nss)
-
-        
-        Soin.objects.create(
-            date=date,
-            type=type,
-            description=description,
-            observation=observation,
-            infirmier_id=request.user.infirmier, 
-            dossier_id=patient.dossierpatient_set.first(),  
-        )
-
-        return redirect('soin_created')
-    return render(request, "soins.html")
-
-def soinCreated(request):
- return render(request, "soins_created.html")
+    
 
 def authentification(request):
+
     if request.method == "POST":
         role = request.POST.get('role')
         username = request.POST.get("username")
         password = request.POST.get("password")
 
-        # Check if the user is an admin
         if role == 'admin' and username == "fatima" and password == "123":
             return redirect('Admin') 
-
-        # Map roles to their corresponding models
-        role_model_map = {
-            'patient': Patient,
-            'medecin': Medecin,
-            'infirmier': Infirmier,
-            'laborantin': Laborantin,
-            'radiologue': Radiologue,
-        }
-
-        try:
-            if role in role_model_map:
-                model = role_model_map[role]
-                user_instance = model.objects.get(email=username)
-
-                # Check the password
-                if user_instance.user.password == password:
-                    return redirect(role)  # Redirect to the respective role's page
-            else:
-                return redirect('error')  # Redirect to an error page if the role is invalid
-
-        except model.DoesNotExist:
-            return redirect('error')  # Redirect to an error page if the user does not exist
+        elif role == 'patient':
+         try:
+           user = Patient.objects.get(user__email=username) 
+           if user.user.check_password(password) :
+              return redirect('success')
+         except Patient.DoesNotExist:
+              return redirect('error')
+        elif role == 'medecin':
+         try:
+           user = Medecin.objects.get(user__email=username) 
+           if user.user.check_password(password) :
+              return redirect('medecin')
+         except Medecin.DoesNotExist:
+              return redirect('error')
+        elif role == 'infirmier':
+         try:
+           user = Infirmier.objects.get(user__email=username) 
+           if user.user.check_password(password) :
+              return redirect('infirmier')
+         except Infirmier.DoesNotExist:
+              return redirect('error')
+        elif role == 'laborantin':
+         try:
+           user = Laborantin.objects.get(user__email=username) 
+           if user.user.check_password(password) :
+              return redirect('laborantin')
+         except Laborantin.DoesNotExist:
+              return redirect('error')
+        elif role == 'radiologue':
+         try:
+           user = Radiologue.objects.get(user__email=username) 
+           if user.user.check_password(password) :
+              return redirect('radiologue')
+         except Radiologue.DoesNotExist:
+              return redirect('error')
 
     return render(request, "authentification.html")
