@@ -3,6 +3,10 @@ from . import views  # Import views from your application
 
 app_name = 'app'
 urlpatterns = [
+    #path('', views.home, name='home'),  # Maps the root URL to the home view    
+    #path('success/', views.success, name='success'),
+    path('Admin/', views.Admin, name='Admin') , 
+    path('authentification/', views.authentification, name='authentifications'),
     path('patients/', views.patient_list, name='patient_list'),  # List patients
     path('patients/<int:id>/', views.patient_detail, name='patient_detail'), # Patient details by ID
     path('patients/<int:id>/delete/', views.patient_destroy, name='patient_delete'),
