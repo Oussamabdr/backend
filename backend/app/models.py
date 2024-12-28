@@ -69,8 +69,8 @@ class Consultation(models.Model):
     motif = models.CharField(max_length=255)
     date = models.DateField()
     resume = models.TextField()
-    dossier_id = models.ForeignKey('DossierPatient', on_delete=models.CASCADE)
-    medecin_id = models.ForeignKey(Medecin, on_delete=models.CASCADE)
+    dossier_id = models.CharField(max_length=50)
+    medecin_id = models.CharField(max_length=50)
 
     def __str__(self):
         return f"Consultation on {self.date} - Motif: {self.motif}"
@@ -79,27 +79,27 @@ class Examen(models.Model):
     type = models.CharField(max_length=50)
     date = models.DateField()
     resultat = models.TextField()
-    consultation_id = models.ForeignKey('Consultation', on_delete=models.CASCADE)
+    consultation_id = models.CharField(max_length=50)
 
 class ExamenRadiologique(models.Model):
     type_image = models.CharField(max_length=50)
     fichier_image = models.TextField()
     compte_rendu = models.TextField()
-    examen_id = models.ForeignKey('Examen', on_delete=models.CASCADE)
-    radiologue_id = models.ForeignKey('Radiologue', on_delete=models.CASCADE)
+    examen_id = models.CharField(max_length=50)
+    radiologue_id = models.CharField(max_length=50)
 
 class CompteRendu(models.Model):
     date = models.DateField()
     contenu = models.TextField()
     auteur_id = models.CharField(max_length=50)  
-    examen_id = models.ForeignKey('Examen', on_delete=models.CASCADE)
+    examen_id = models.CharField(max_length=50)
 
 class ExamenBiologique(models.Model):
     parametres = models.TextField()
     valeurs = models.TextField()
     graphique_tendance = models.TextField()
-    examen_id = models.ForeignKey('Examen', on_delete=models.CASCADE)
-    laborantin_id = models.ForeignKey('Laborantin', on_delete=models.CASCADE)
+    examen_id = models.CharField(max_length=50)
+    laborantin_id = models.CharField(max_length=50)
 
 class Medicament(models.Model):
      nom = models.CharField(max_length=100)
@@ -107,8 +107,8 @@ class Medicament(models.Model):
      voie_administration = models.CharField(max_length=50)
 
 class OrdonnanceMedicament(models.Model):
-     ordonnance_id = models.ForeignKey('Ordonnance', on_delete=models.CASCADE)
-     medicament_id = models.ForeignKey('Medicament', on_delete=models.CASCADE)
+     ordonnance_id = models.CharField(max_length=50)
+     medicament_id = models.CharField(max_length=50)
 
 class DossierPatient(models.Model):
     date_creation = models.DateField()
@@ -118,26 +118,26 @@ class Antecedent(models.Model):
     type = models.CharField(max_length=100)  
     description = models.TextField()
     date_declaration = models.DateField()
-    dossier_id = models.ForeignKey('DossierPatient', on_delete=models.CASCADE)
+    dossier_id = models.CharField(max_length=50)
 
 class CertificatMedical(models.Model):
     date_emission = models.DateField()
     motif = models.CharField(max_length=255)
     date_arret = models.CharField(max_length=50)
-    dossier_id = models.ForeignKey('DossierPatient', on_delete=models.CASCADE)
+    dossier_id = models.CharField(max_length=50)
 
 class Soin(models.Model):
     date = models.DateField()
     type = models.TextField()  
     description = models.TextField()
-    infirmier_id = models.ForeignKey('Infirmier', on_delete=models.CASCADE)  
-    dossier_id = models.ForeignKey('DossierPatient', on_delete=models.CASCADE)  
+    infirmier_id = models.CharField(max_length=50)
+    dossier_id = models.CharField(max_length=50)  
     observation = models.TextField() 
 
 class Ordonnance(models.Model):
     date = models.DateField()
     duree = models.CharField(max_length=50)
-    consultation_id = models.ForeignKey('Consultation', on_delete=models.CASCADE)
+    consultation_id = models.CharField(max_length=50)
 
 
 
