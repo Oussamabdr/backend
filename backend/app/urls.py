@@ -11,6 +11,7 @@ urlpatterns = [
     path('laborantin/', views.laborantin, name='laborantin') , 
     path('radiologue/', views.radiologue, name='radiologue') , 
     path('error/', views.error, name='error') ,
+    path('soin/', views.soinCreated, name='soin_created') ,
 
 
 ]  
