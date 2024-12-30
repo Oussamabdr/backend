@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.views import APIView
-from rest_framework.generics import RetrieveAPIView,CreateAPIView,UpdateAPIView,ListAPIView,DestroyAPIView
+from rest_framework.generics import RetrieveAPIView,CreateAPIView,UpdateAPIView,ListAPIView,DestroyAPIView,RetrieveUpdateDestroyAPIView,ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
@@ -24,6 +24,7 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserWithRoleSerializer
     permission_classes = [IsAdminOrReadOnly]
 # Create your views here.
+'''
 @api_view(['GET', 'POST'])
 @csrf_exempt
 def patient_list(request):
@@ -354,8 +355,20 @@ class SearchPatientView(APIView):
         except Patient.DoesNotExist:
             return Response({"error": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
 
+'''
+class ListConsultationView(ListAPIView):
+    queryset = Consultation.objects.all()
+    serializer_class = ConsultationSerializer
 
 class CreateConsultationView(CreateAPIView):
+    queryset = Consultation.objects.all()
+    serializer_class = ConsultationSerializer
+
+class UpdateConsultationView(UpdateAPIView):
+    queryset = Consultation.objects.all()
+    serializer_class = ConsultationSerializer
+
+class DeleteConsultationView(DestroyAPIView):
     queryset = Consultation.objects.all()
     serializer_class = ConsultationSerializer
 
@@ -363,74 +376,62 @@ class AddOrdonnanceView(CreateAPIView):
     queryset = Ordonnance.objects.all()
     serializer_class =  OrdonnanceSerializer
 
-class RequestExamenView(CreateAPIView):
-    queryset = Examen.objects.all()
-    serializer_class = ExamenSerializer
-
-class UpdateConsultationView(UpdateAPIView):
-    queryset = Consultation.objects.all()
-    serializer_class = ConsultationSerializer
-
-class ListConsultationView(ListAPIView):
-    queryset = Consultation.objects.all()
-    serializer_class = ConsultationSerializer
-
 class ListOrdonnanceView(ListAPIView):
     queryset = Ordonnance.objects.all()
     serializer_class = OrdonnanceSerializer
 
-class ListExamenView(ListAPIView):
-    queryset = Examen.objects.all()
-    serializer_class = ExamenSerializer
-
 class DeleteOrdonnanceView(DestroyAPIView):
     queryset = Ordonnance.objects.all()
     serializer_class = OrdonnanceSerializer
+'''
+class ListExamenView(ListAPIView):
+    serializer_class = ExamenSerializer
 
-class DeleteMedicalExamView(DestroyAPIView):
+    def get_queryset(self):
+        """
+        This view should return a list of all exams
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return Examen.objects.filter(medecin=user)
+
+class CreateExamenView(CreateAPIView):
     queryset = Examen.objects.all()
     serializer_class = ExamenSerializer
 
-class DeleteConsultationView(DestroyAPIView):
-    queryset = Consultation.objects.all()
-    serializer_class = ConsultationSerializer
-
-class RequestMedicalExamView(CreateAPIView):
+class UpdateExamenView(UpdateAPIView):
     queryset = Examen.objects.all()
     serializer_class = ExamenSerializer
 
-class ListExamenRadiologiqueView(ListAPIView):
+class DeleteExamenView(DestroyAPIView):
+    queryset = Examen.objects.all()
+    serializer_class = ExamenSerializer
+
+
+class ExamenDetailView(RetrieveAPIView):
+    serializer_class = ExamenSerializer
+    queryset = Examen.objects.all()'''
+
+class ExamenRadiologiqueListCreateView(CreateAPIView):
     queryset = ExamenRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
-class CreateExamenRadiologiqueView(CreateAPIView):
+# View for retrieving, updating, and deleting ExamenRadiologique
+class ExamenRadiologiqueDetailView(RetrieveUpdateDestroyAPIView):
     queryset = ExamenRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
-class UpdateExamenRadiologiqueView(UpdateAPIView):
-    queryset = ExamenRadiologique.objects.all()
-    serializer_class = ExamenRadiologiqueSerializer
-
-class DeleteExamenRadiologiqueView(DestroyAPIView):
-    queryset = ExamenRadiologique.objects.all()
-    serializer_class = ExamenRadiologiqueSerializer
-
-
-class ListExamenBiologiqueView(ListAPIView):
+# View for listing and creating ExamenBiologique
+class ExamenBiologiqueListCreateView(ListCreateAPIView):
     queryset = ExamenBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
-class CreateExamenBiologiqueView(CreateAPIView):
+# View for retrieving, updating, and deleting ExamenBiologique
+class ExamenBiologiqueDetailView(RetrieveUpdateDestroyAPIView):
     queryset = ExamenBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
-class UpdateExamenBiologiqueView(UpdateAPIView):
-    queryset = ExamenBiologique.objects.all()
-    serializer_class = ExamenBiologiqueSerializer
 
-class DeleteExamenBiologiqueView(DestroyAPIView):
-    queryset = ExamenBiologique.objects.all()
-    serializer_class = ExamenBiologiqueSerializer
 
 class ListInfirmierView(ListAPIView):
     queryset = Infirmier.objects.all()
@@ -638,18 +639,21 @@ class PatientDetailView(RetrieveAPIView):
     serializer_class = PatientSerializer
     queryset = Patient.objects.all()
 
-class ExamenDetailView(RetrieveAPIView):
-    serializer_class = ExamenSerializer
-    queryset = Examen.objects.all()
+class ListPatientView(ListAPIView):
+    serializer_class = PatientSerializer
+    queryset = Patient.objects.all()
 
-class ExamenBiologiqueDetailView(RetrieveAPIView):
-    serializer_class = ExamenBiologiqueSerializer
-    queryset = ExamenBiologique.objects.all()
+class CreatePatientView(CreateAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
 
-class ExamenRadiologiqueDetailView(RetrieveAPIView):
-    serializer_class = ExamenRadiologiqueSerializer
-    queryset = ExamenRadiologique.objects.all()
+class UpdatePatientView(UpdateAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
 
+class DeletePatientView(DestroyAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
 
 class OrdonnanceListView(ListAPIView):
     serializer_class = OrdonnanceSerializer
@@ -683,48 +687,7 @@ class UpdateOrdonnanceView(UpdateAPIView):
     queryset = Ordonnance.objects.all()
     serializer_class = OrdonnanceSerializer
 
-class MedicalExamListView(ListAPIView):
-    serializer_class = ExamenSerializer
 
-    def get_queryset(self):
-        """
-        This view should return a list of all medical exams
-        for the currently authenticated user.
-        """
-        user = self.request.user
-        return Examen.objects.filter(medecin=user)
-class UpdateMedicalExamView(UpdateAPIView):
-    queryset = Examen.objects.all()
-    serializer_class = ExamenSerializer
-
-    def get_queryset(self):
-        """
-        This view should return a list of all medical exams
-        for the currently authenticated user's consultation.
-        """
-        user = self.request.user
-        return Examen.objects.filter(consultation__medecin=user)
-
-class ExamenRadiologiqueListView(ListAPIView):
-    serializer_class = ExamenRadiologiqueSerializer
-
-    def get_queryset(self):
-        """
-        This view should return a list of all radiological exams
-        for the currently authenticated user.
-        """
-        user = self.request.user
-        return ExamenRadiologique.objects.filter(radiologue=user)
-class ExamenBiologiqueListView(ListAPIView):
-    serializer_class = ExamenBiologiqueSerializer
-
-    def get_queryset(self):
-        """
-        This view should return a list of all biological exams
-        for the currently authenticated user.
-        """
-        user = self.request.user
-        return ExamenBiologique.objects.filter(laborantin=user)
 
 class CompteRenduListView(ListAPIView):
     serializer_class = CompteRenduSerializer

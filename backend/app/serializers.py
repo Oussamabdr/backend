@@ -35,16 +35,32 @@ class ExamenSerializer(serializers.ModelSerializer):
         model = Examen
         fields = '__all__'
 
+    def to_representation(self, instance):
+        """
+        If the instance is an ExamenBiologique, return the ExamenBiologiqueSerializer data.
+        If the instance is an ExamenRadiologique, return the ExamenRadiologiqueSerializer data.
+        """
+        if isinstance(instance, ExamenBiologique):
+            serializer = ExamenBiologiqueSerializer(instance, context=self.context)
+        elif isinstance(instance, ExamenRadiologique):
+            serializer = ExamenRadiologiqueSerializer(instance, context=self.context)
+        else:
+            serializer = self.__class__(instance, context=self.context)
+
+        return serializer.data
+
+
 class ExamenBiologiqueSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamenBiologique
         fields = '__all__'
 
+
 class ExamenRadiologiqueSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamenRadiologique
         fields = '__all__'
-
+        
 class CompteRenduSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompteRendu

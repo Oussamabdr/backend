@@ -1,4 +1,4 @@
-from django.urls import path
+'''from django.urls import path
 
 from app import admin
 
@@ -67,3 +67,127 @@ urlpatterns = [
     path('soins/<int:pk>/delete/', views.DeleteSoinView.as_view(), name='delete_soin'),
 ]
 
+'''
+
+from django.urls import path
+from .views import (
+    # Patient-related views
+    CreatePatientView,
+    ExamenBiologiqueListCreateView,
+    ExamenRadiologiqueListCreateView,
+    ListPatientView,
+    PatientDetailView,
+    UpdatePatientView,
+    DeletePatientView,
+    # Consultation-related views
+    CreateConsultationView,
+    ListConsultationView,
+    UpdateConsultationView,
+    DeleteConsultationView,
+    ConsultationListView,
+    # Ordonnance-related views
+    AddOrdonnanceView,
+    ListOrdonnanceView,
+    OrdonnanceListView,
+    UpdateOrdonnanceView,
+    DeleteOrdonnanceView,
+    OrdonnanceDetailView,
+    # Examen-related views
+    ExamenRadiologiqueDetailView,
+    ExamenBiologiqueDetailView,
+    # Other models (Medicament, Certificat, etc.)
+    ListMedicamentView,
+    MedicamentDetailView,
+    ListCertificatMedicalView,
+    CertificatMedicalDetailView,
+    SoinListView,
+    SoinDetailView,
+    ListInfirmierView,
+    CreateInfirmierView,
+    UpdateInfirmierView,
+    DeleteInfirmierView,
+    ListRadiologueView,
+    ListDossierPatientView,
+    CreateDossierPatientView,
+    UpdateDossierPatientView,
+    DeleteDossierPatientView,
+    # Custom Views for Medecins, Patients, etc.
+    MedecinPatientList,
+    MedecinPatientDetail,
+)
+
+urlpatterns = [
+    
+
+    # Consultation URLs
+    path("consultations/", ListConsultationView.as_view(), name="consultation-list"),
+    path("consultations/create/", CreateConsultationView.as_view(), name="consultation-create"),
+    path("consultations/<int:pk>/update/", UpdateConsultationView.as_view(), name="consultation-update"),
+    path("consultations/<int:pk>/delete/", DeleteConsultationView.as_view(), name="consultation-delete"),
+
+    # Ordonnance URLs
+    path("ordonnances/", ListOrdonnanceView.as_view(), name="ordonnance-list"),
+    path("ordonnances/create/", AddOrdonnanceView.as_view(), name="ordonnance-create"),
+    path("ordonnances/<int:pk>/", OrdonnanceDetailView.as_view(), name="ordonnance-detail"),
+    path("ordonnances/<int:pk>/update/", UpdateOrdonnanceView.as_view(), name="ordonnance-update"),
+    path("ordonnances/<int:pk>/delete/", DeleteOrdonnanceView.as_view(), name="ordonnance-delete"),
+
+      # Examen Radiologique URLs
+    path('examens/radiologique/', ExamenRadiologiqueListCreateView.as_view(), name='examen-radiologique-list-create'),
+    path('examens/radiologique/<int:pk>/', ExamenRadiologiqueDetailView.as_view(), name='examen-radiologique-detail'),
+
+    # Examen Biologique URLs
+    path('examens/biologique/', ExamenBiologiqueListCreateView.as_view(), name='examen-biologique-list-create'),
+    path('examens/biologique/<int:pk>/', ExamenBiologiqueDetailView.as_view(), name='examen-biologique-detail'),
+
+    # Medicament URLs
+    path("medicaments/", ListMedicamentView.as_view(), name="medicament-list"),
+    path("medicaments/<int:pk>/", MedicamentDetailView.as_view(), name="medicament-detail"),
+
+    # Certificat URLs
+    path("certificats/", ListCertificatMedicalView.as_view(), name="certificat-list"),
+    path("certificats/<int:pk>/", CertificatMedicalDetailView.as_view(), name="certificat-detail"),
+
+    # Soin URLs
+    path("soins/", SoinListView.as_view(), name="soin-list"),
+    path("soins/<int:pk>/", SoinDetailView.as_view(), name="soin-detail"),
+
+    # Infirmier URLs
+    path("infirmiers/", ListInfirmierView.as_view(), name="infirmier-list"),
+    path("infirmiers/create/", CreateInfirmierView.as_view(), name="infirmier-create"),
+    path("infirmiers/<int:pk>/update/", UpdateInfirmierView.as_view(), name="infirmier-update"),
+    path("infirmiers/<int:pk>/delete/", DeleteInfirmierView.as_view(), name="infirmier-delete"),
+
+    # Radiologue URLs
+    path("radiologues/", ListRadiologueView.as_view(), name="radiologue-list"),
+
+    # Dossier Patient URLs
+    path("dossiers-patient/", ListDossierPatientView.as_view(), name="dossier-patient-list"),
+    path("dossiers-patient/create/", CreateDossierPatientView.as_view(), name="dossier-patient-create"),
+    path("dossiers-patient/<int:pk>/update/", UpdateDossierPatientView.as_view(), name="dossier-patient-update"),
+    path("dossiers-patient/<int:pk>/delete/", DeleteDossierPatientView.as_view(), name="dossier-patient-delete"),
+
+    # Medecin and Patient Views
+    path("medecins/patients/", MedecinPatientList.as_view(), name="medecin-patient-list"),
+    path("medecins/patients/<int:pk>/", MedecinPatientDetail.as_view(), name="medecin-patient-detail"),
+
+    # Patient URLs
+    path("patients/", ListPatientView.as_view(), name="patient-list"),
+    path("patients/create/", CreatePatientView.as_view(), name="patient-create"),
+    path("patients/<int:pk>/", PatientDetailView.as_view(), name="patient-detail"),
+    path("patients/<int:pk>/update/", UpdatePatientView.as_view(), name="patient-update"),
+    path("patients/<int:pk>/delete/", DeletePatientView.as_view(), name="patient-delete"),
+]
+'''# Examen URLs
+    path("examens/", ListExamenView.as_view(), name="examen-list"),
+    path("examens/create/", RequestExamenView.as_view(), name="examen-create"),
+    path("examens/<int:pk>/", ExamenDetailView.as_view(), name="examen-detail"),
+    path("examens/<int:pk>/delete/", DeleteMedicalExamView.as_view(), name="examen-delete"),
+
+    # Radiological Exams
+    path("examens/radiologique/", ExamenRadiologiqueListView.as_view(), name="examen-radiologique-list"),
+    path("examens/radiologique/<int:pk>/", ExamenRadiologiqueDetailView.as_view(), name="examen-radiologique-detail"),
+
+    # Biological Exams
+    path("examens/biologique/", ExamenBiologiqueListView.as_view(), name="examen-biologique-list"),
+    path("examens/biologique/<int:pk>/", ExamenBiologiqueDetailView.as_view(), name="examen-biologique-detail"),'''

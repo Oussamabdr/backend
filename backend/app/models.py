@@ -11,14 +11,15 @@ class Patient(models.Model):
     phone = models.CharField(max_length=15)
     medecin_traitant = models.CharField(max_length=100)
     personne_contact = models.CharField(max_length=100)
-
+    medecin = models.ForeignKey('Medecin', on_delete=models.CASCADE, related_name="patients_set")
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} - NSS: {self.num_securite_sociale}"
 
 
 class Medecin(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medecin")
-
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="medecin_set")
+    patients = models.ManyToManyField(Patient, related_name="medecin")
+    
     def __str__(self):
         return f"Dr. {self.user.first_name} {self.user.last_name}"
 
@@ -63,33 +64,35 @@ class Consultation(models.Model):
 
 
 class Examen(models.Model):
+    examen_id = models.AutoField(primary_key=True, serialize=True)
     type = models.CharField(max_length=50)
     date = models.DateField()
     resultat = models.TextField()
-    consultation = models.ForeignKey(Consultation, on_delete=models.CASCADE, related_name="examens")
+
+    class Meta:
+        abstract = True
 
 
-class ExamenRadiologique(models.Model):
+class ExamenRadiologique(Examen):
+    consultation = models.ForeignKey(Consultation, on_delete=models.CASCADE, related_name="radiologiques")
     type_image = models.CharField(max_length=50)
     fichier_image = models.TextField()
     compte_rendu = models.TextField()
-    examen = models.ForeignKey(Examen, on_delete=models.CASCADE, related_name="examens_radiologiques")
     radiologue = models.ForeignKey(Radiologue, on_delete=models.CASCADE, related_name="examens_radiologiques")
 
 
-
-class ExamenBiologique(models.Model):
+class ExamenBiologique(Examen):
+    consultation = models.ForeignKey(Consultation, on_delete=models.CASCADE, related_name="biologiques")
     parametres = models.TextField()
     valeurs = models.TextField()
     graphique_tendance = models.TextField()
-    examen = models.ForeignKey(Examen, on_delete=models.CASCADE, related_name="examens_biologiques")
     laborantin = models.ForeignKey(Laborantin, on_delete=models.CASCADE, related_name="examens_biologiques")
 
 class CompteRendu(models.Model):
     date = models.DateField()
     contenu = models.TextField()
     auteur = models.CharField(max_length=50)
-    examen = models.ForeignKey(Examen, on_delete=models.CASCADE, related_name="comptes_rendus")
+    examen = models.ForeignKey(ExamenRadiologique, on_delete=models.CASCADE, related_name="compte_rendus", blank=True, null=True)
     
 
 class Medicament(models.Model):
