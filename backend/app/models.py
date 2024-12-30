@@ -78,17 +78,29 @@ class Consultation(models.Model):
         return f"Consultation on {self.date} - Motif: {self.motif}"
     
 class Examen(models.Model):
+    examen_id = models.AutoField(primary_key=True, serialize=True)
     type = models.CharField(max_length=50)
     date = models.DateField()
     resultat = models.TextField()
-    consultation_id = models.CharField(max_length=50)
 
-class ExamenRadiologique(models.Model):
+    class Meta:
+        abstract = True
+
+
+class ExamenRadiologique(Examen):
+    consultation = models.ForeignKey(Consultation, on_delete=models.CASCADE, related_name="radiologiques")
     type_image = models.CharField(max_length=50)
     fichier_image = models.TextField()
     compte_rendu = models.TextField()
-    examen_id = models.CharField(max_length=50)
-    radiologue_id = models.CharField(max_length=50)
+    radiologue = models.ForeignKey(Radiologue, on_delete=models.CASCADE, related_name="examens_radiologiques")
+
+
+class ExamenBiologique(Examen):
+    consultation = models.ForeignKey(Consultation, on_delete=models.CASCADE, related_name="biologiques")
+    parametres = models.TextField()
+    valeurs = models.TextField()
+    graphique_tendance = models.TextField()
+    laborantin = models.ForeignKey(Laborantin, on_delete=models.CASCADE, related_name="examens_biologiques")
 
 class CompteRendu(models.Model):
     date = models.DateField()
@@ -96,12 +108,6 @@ class CompteRendu(models.Model):
     auteur_id = models.CharField(max_length=50)  
     examen_id = models.CharField(max_length=50)
 
-class ExamenBiologique(models.Model):
-    parametres = models.TextField()
-    valeurs = models.TextField()
-    graphique_tendance = models.TextField()
-    examen_id = models.CharField(max_length=50)
-    laborantin_id = models.CharField(max_length=50)
 
 class Medicament(models.Model):
      nom = models.CharField(max_length=100)
