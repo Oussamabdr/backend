@@ -6,7 +6,7 @@ from . import views  # Import views from your application
 
 app_name = 'app'
 urlpatterns = [
-    path('admin/', admin.admin.site.urls),  # Admin site
+    #path('admin/', admin.admin.site.urls),  # Admin site  
     path('patients/', views.patient_list, name='patient_list'),  # List patients
     path('patients/<int:id>/', views.patient_detail, name='patient_detail'), # Patient details by ID
     path('patients/<int:id>/delete/', views.patient_destroy, name='patient_delete'),
