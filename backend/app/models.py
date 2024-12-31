@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
     num_securite_sociale = models.CharField(max_length=50)
@@ -9,7 +10,7 @@ class Patient(models.Model):
     date_naissance = models.DateField()
     adress = models.CharField(max_length=255)
     telephone = models.CharField(max_length=15)
-    medecin_traitant = models.CharField(max_length=100)
+    medecin_traitant = models.ForeignKey('Medecin', on_delete=models.CASCADE, related_name="patients_set")
     personne_contact = models.CharField(max_length=100)
 
     def __str__(self):
@@ -21,7 +22,8 @@ class Medecin(models.Model):
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     email = models.EmailField(max_length=100)
-
+    patients = models.ManyToManyField(Patient, related_name="medecin_set")
+    
     def __str__(self):
         return f"Dr. {self.nom} {self.prenom}"
 
@@ -138,6 +140,7 @@ class Ordonnance(models.Model):
     date = models.DateField()
     duree = models.CharField(max_length=50)
     consultation_id = models.CharField(max_length=50)
+    validated = models.BooleanField(default=False)
 
 
 
