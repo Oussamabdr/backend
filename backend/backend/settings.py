@@ -87,8 +87,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'TP_IGL',        # Replace with your MySQL database name
-        'USER': 'oussama',        # Replace with your MySQL user
-        'PASSWORD': 'oussama2005', # Replace with your MySQL password
+        'USER': 'root',        # Replace with your MySQL user
+        'PASSWORD': 'fatima2004', # Replace with your MySQL password
         'HOST': 'localhost',           # Or use the IP if not on the same machine
         'PORT': '3306',                # Default MySQL port
     }
