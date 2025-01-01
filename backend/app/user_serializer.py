@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework.permissions import BasePermission
-from .models import Patient,Infirmier,Medecin,Pharmacien,Radiologue,Technicien
+from .models import Patient,Infirmier,Medecin,Pharmacien,Radiologue,Laborantin
 from .serializers import ConsultationSerializer
 
 
@@ -26,12 +26,6 @@ class PatientSerializer(serializers.ModelSerializer):
         model = Patient
         fields = '__all__'
 
-class PatientDetailSerializer(serializers.ModelSerializer):
-    consultations = ConsultationSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Patient
-        fields = ['id', 'nss', 'name', 'date_of_birth', 'address', 'phone', 'mutuelle', 'consultations']
 
 class PharmacienSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,10 +37,15 @@ class RadiologueSerializer(serializers.ModelSerializer):
         model = Radiologue
         fields = '__all__'
 
-class TechnicienSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Technicien
+class LaborantinSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Laborantin
         fields = '__all__'
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
 class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):

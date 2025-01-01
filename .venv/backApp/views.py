@@ -1,13 +1,16 @@
 from django.shortcuts import render
+from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.generics import RetrieveAPIView,CreateAPIView,UpdateAPIView,ListAPIView,DestroyAPIView
+from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.auth.models import User
-from .user_serializer import UserWithRoleSerializer
-from .user_serializer import IsAdminOrReadOnly 
-from django.http import JsonResponse
-from .models import Patient , Medecin, Pharmacien, Infermier, Technicien, Radiologue, Prescription, Examen
+from .user_serializer import UserWithRoleSerializer,IsAdminOrReadOnly ,PatientSerializer,PatientDetailSerializer,MedecinSerializer,PharmacienSerializer,InfirmierSerializer,TechnicienSerializer,RadiologueSerializer,InfirmierSerializer
+from .models import Patient , Medecin, Pharmacien, Infirmier, Technicien, Radiologue, Prescription, Examen,Consultation,Prescription,Infirmier
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .user_serializer import PatientSerializer
+from .serializers import ConsultationSerializer,PrescriptionSerializer,ExamenSerializer
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
@@ -312,38 +315,109 @@ def technicien_destroy(request, id):
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
-def infermier_list(request):
+def infirmier_list(request):
     if request.method == 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
-    infermiers = list(Infermier.objects.all())
-    infermier_dicts = [model_to_dict(infermier) for infermier in infermiers]
-    return JsonResponse(infermier_dicts, safe=False)
+    infirmiers = list(Infirmier.objects.all())
+    infirmier_dicts = [model_to_dict(infirmier) for infirmier in infirmiers]
+    return JsonResponse(infirmier_dicts, safe=False)
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
-def infermier_detail(request, id):
+def infirmier_detail(request, id):
     if request.method == 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
     try:
-        infermier = Infermier.objects.get(pk=id)
-        return JsonResponse(model_to_dict(infermier))
-    except Infermier.DoesNotExist:
-        return JsonResponse({'error': 'Infermier not found'}, status=404)
+        infirmier = Infirmier.objects.get(pk=id)
+        return JsonResponse(model_to_dict(infirmier))
+    except Infirmier.DoesNotExist:
+        return JsonResponse({'error': 'Infirmier not found'}, status=404)
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
-def infermier_destroy(request, id):
+def infirmier_destroy(request, id):
     if request.method == 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
     try:
-        infermier = Infermier.objects.get(pk=id)
-        infermier.delete()
-        return JsonResponse({'message': 'Infermier deleted'}, status=200)
-    except Infermier.DoesNotExist:
-        return JsonResponse({'error': 'Infermier not found'}, status=404)
+        infirmier = Infirmier.objects.get(pk=id)
+        infirmier.delete()
+        return JsonResponse({'message': 'Infirmier deleted'}, status=200)
+    except Infirmier.DoesNotExist:
+        return JsonResponse({'error': 'Infirmier not found'}, status=404)
 
 
+class SearchPatientView(APIView):
+    def get(self, request, nss):
+        try:
+            patient = Patient.objects.get(nss=nss)
+            serializer = PatientSerializer(patient)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Patient.DoesNotExist:
+            return Response({"error": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
 
+class PatientDetailView(RetrieveAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = PatientDetailSerializer  
+
+class CreateConsultationView(CreateAPIView):
+    queryset = Consultation.objects.all()
+    serializer_class = ConsultationSerializer
+
+class AddPrescriptionView(CreateAPIView):
+    queryset = Prescription.objects.all()
+    serializer_class = PrescriptionSerializer
+
+class RequestExamenView(CreateAPIView):
+    queryset = Examen.objects.all()
+    serializer_class = ExamenSerializer
+
+class UpdateConsultationView(UpdateAPIView):
+    queryset = Consultation.objects.all()
+    serializer_class = ConsultationSerializer
+
+class ListConsultationView(ListAPIView):
+    queryset = Consultation.objects.all()
+    serializer_class = ConsultationSerializer
+
+class ListPrescriptionView(ListAPIView):
+    queryset = Prescription.objects.all()
+    serializer_class = PrescriptionSerializer
+
+class ListExamenView(ListAPIView):
+    queryset = Examen.objects.all()
+    serializer_class = ExamenSerializer
+
+class DeletePrescriptionView(DestroyAPIView):
+    queryset = Prescription.objects.all()
+    serializer_class = PrescriptionSerializer
+
+class DeleteMedicalExamView(DestroyAPIView):
+    queryset = Examen.objects.all()
+    serializer_class = ExamenSerializer
+
+class DeleteConsultationView(DestroyAPIView):
+    queryset = Consultation.objects.all()
+    serializer_class = ConsultationSerializer
+
+class RequestMedicalExamView(CreateAPIView):
+    queryset = Examen.objects.all()
+    serializer_class = ExamenSerializer
+
+class ListInfirmierView(ListAPIView):
+    queryset = Infirmier.objects.all()
+    serializer_class = InfirmierSerializer
+
+class CreateInfirmierView(CreateAPIView):
+    queryset = Infirmier.objects.all()
+    serializer_class = InfirmierSerializer
+
+class UpdateInfirmierView(UpdateAPIView):
+    queryset = Infirmier.objects.all()
+    serializer_class = InfirmierSerializer
+
+class DeleteInfirmierView(DestroyAPIView):
+    queryset = Infirmier.objects.all()
+    serializer_class = InfirmierSerializer

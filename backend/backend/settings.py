@@ -37,7 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "app"
+    'app',
+    'backApp',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django.contrib.sites',
+    #'verify_email',
 ]
 
 MIDDLEWARE = [
@@ -124,3 +129,4 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
+SITE_ID = 1
