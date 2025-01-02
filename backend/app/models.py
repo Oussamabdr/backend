@@ -155,10 +155,9 @@ class BilanBiologique(models.Model):
     date_creation = models.DateTimeField(auto_now_add=True)
     observation = models.TextField(blank=True, null=True)
 
-    hemoglobine = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)  # g/dL
-    glycémie = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)  # mg/dL
-    cholestérol_total = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)  # mg/dL
-
+    hemoglobine = models.BooleanField(default=True)  # True by default
+    glycémie = models.BooleanField(default=True)  
+    cholestérol_total = models.BooleanField(default=True)  
     def __str__(self):
         return f"Bilan Biologique - {self.patient} ({self.date_creation})"
 
