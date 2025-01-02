@@ -149,6 +149,28 @@ class Ordonnance(models.Model):
     validated = models.BooleanField(default=False)
 
 
+class BilanBiologique(models.Model):
+    patient = models.CharField(max_length=50)
+    medecin = models.CharField(max_length=50)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    observation = models.TextField(blank=True, null=True)
+
+    hemoglobine = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)  # g/dL
+    glycémie = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)  # mg/dL
+    cholestérol_total = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)  # mg/dL
+
+    def __str__(self):
+        return f"Bilan Biologique - {self.patient} ({self.date_creation})"
+
+# Modèle pour le bilan radiologique
+class BilanRadiologique(models.Model):
+    patient_id = models.CharField(max_length=50)
+    medecin_id = models.CharField(max_length=50)
+    consultation_id = models.CharField(max_length=50)
+    description = models.TextField(blank=True, null=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Bilan Radiologique - {self.patient} ({self.type_examen})"
 
 
 # Create your models here.
