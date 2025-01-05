@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Antecedent, Examen,ExamenRadiologique,ExamenBiologique, DossierPatient, Consultation,CompteRendu,Medicament,OrdonnanceMedicament,CertificatMedical,Soin,Ordonnance
+from .models import Antecedent,ExRadiologique,ExBiologique, DossierPatient, Consultation,CompteRendu,Medicament,OrdonnanceMedicament,CertificatMedical,Soin,Ordonnance
 
 class ConsultationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,33 +30,16 @@ class AntecedentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ExamenSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Examen
-        fields = '__all__'
 
-    def to_representation(self, instance):
-        """
-        If the instance is an ExamenBiologique, return the ExamenBiologiqueSerializer data.
-        If the instance is an ExamenRadiologique, return the ExamenRadiologiqueSerializer data.
-        """
-        if isinstance(instance, ExamenBiologique):
-            serializer = ExamenBiologiqueSerializer(instance, context=self.context)
-        elif isinstance(instance, ExamenRadiologique):
-            serializer = ExamenRadiologiqueSerializer(instance, context=self.context)
-        else:
-            serializer = self.__class__(instance, context=self.context)
-
-        return serializer.data
 
 class ExamenBiologiqueSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ExamenBiologique
+        model = ExBiologique
         fields = '__all__'
 
 class ExamenRadiologiqueSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ExamenRadiologique
+        model = ExRadiologique
         fields = '__all__'
 
 class CompteRenduSerializer(serializers.ModelSerializer):

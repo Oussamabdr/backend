@@ -8,9 +8,9 @@ admin.site.register(Laborantin)
 admin.site.register(Radiologue)
 
 admin.site.register(Consultation)
-admin.site.register(ExamenRadiologique)
+admin.site.register(ExRadiologique)
 admin.site.register(CompteRendu)
-admin.site.register(ExamenBiologique)
+admin.site.register(ExBiologique)
 
 admin.site.register(Medicament)
 admin.site.register(OrdonnanceMedicament)

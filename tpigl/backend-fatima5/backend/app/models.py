@@ -22,7 +22,6 @@ class Medecin(models.Model):
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     email = models.EmailField(max_length=100)
-    patients = models.ManyToManyField(Patient, related_name="medecin_set")
     
     def __str__(self):
         return f"Dr. {self.nom} {self.prenom}"
@@ -77,30 +76,29 @@ class Consultation(models.Model):
     def __str__(self):
         return f"Consultation on {self.date} - Motif: {self.motif}"
     
-class Examen(models.Model):
-    examen_id = models.AutoField(primary_key=True, serialize=True)
+
+class ExBiologique(models.Model):
     type = models.CharField(max_length=50)
     date = models.DateField()
     resultat = models.TextField()
-
-    class Meta:
-        abstract = True
-
-
-class ExamenRadiologique(Examen):
-    consultation = models.ForeignKey(Consultation, on_delete=models.CASCADE, related_name="radiologiques")
+    consultation_id = models.CharField(max_length=50)
+    parametres = models.TextField()
+    interpretations = models.TextField()
+    valeurs = models.TextField()
+    graphique_tendance = models.TextField()
+    laborantin_id = models.CharField(max_length=50)
+    
+class ExRadiologique(models.Model):
+    type = models.CharField(max_length=50)
+    date = models.DateField()
+    resultat = models.TextField()
+    consultation_id = models.CharField(max_length=50)
     type_image = models.CharField(max_length=50)
     fichier_image = models.TextField()
     compte_rendu = models.TextField()
-    radiologue = models.ForeignKey(Radiologue, on_delete=models.CASCADE, related_name="examens_radiologiques")
+    radiologue_id = models.CharField(max_length=50)
 
 
-class ExamenBiologique(Examen):
-    consultation = models.ForeignKey(Consultation, on_delete=models.CASCADE, related_name="biologiques")
-    parametres = models.TextField()
-    valeurs = models.TextField()
-    graphique_tendance = models.TextField()
-    laborantin = models.ForeignKey(Laborantin, on_delete=models.CASCADE, related_name="examens_biologiques")
 
 class CompteRendu(models.Model):
     date = models.DateField()
@@ -108,6 +106,11 @@ class CompteRendu(models.Model):
     auteur_id = models.CharField(max_length=50)  
     examen_id = models.CharField(max_length=50)
 
+class Ordonnance(models.Model):
+    date = models.DateField()
+    duree = models.CharField(max_length=50)
+    consultation_id = models.CharField(max_length=50)
+    validated = models.BooleanField(default=False)
 
 class Medicament(models.Model):
      nom = models.CharField(max_length=100)
@@ -121,6 +124,7 @@ class OrdonnanceMedicament(models.Model):
 class DossierPatient(models.Model):
     date_creation = models.DateField()
     num_securite_sociale = models.CharField(max_length=50)
+    qr_code = models.ImageField(upload_to='patients/qr_codes/', null=True, blank=True)
 
 class Antecedent(models.Model):
     type = models.CharField(max_length=100)  
@@ -142,11 +146,7 @@ class Soin(models.Model):
     dossier_id = models.CharField(max_length=50)  
     observation = models.TextField() 
 
-class Ordonnance(models.Model):
-    date = models.DateField()
-    duree = models.CharField(max_length=50)
-    consultation_id = models.CharField(max_length=50)
-    validated = models.BooleanField(default=False)
+
 
 
 class BilanBiologique(models.Model):
@@ -154,7 +154,6 @@ class BilanBiologique(models.Model):
     medecin = models.CharField(max_length=50)
     date_creation = models.DateTimeField(auto_now_add=True)
     observation = models.TextField(blank=True, null=True)
-
     hemoglobine = models.BooleanField(default=True)  # True by default
     glycémie = models.BooleanField(default=True)  
     cholestérol_total = models.BooleanField(default=True)  

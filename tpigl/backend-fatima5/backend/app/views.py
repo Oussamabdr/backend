@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from .models import *
 import json
+from datetime import datetime
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.views import APIView
@@ -28,7 +29,21 @@ from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
+import qrcode
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
+def generate_patient_qr_code(patient_data):
+    # Create the QR code
+    qr = qrcode.make(patient_data)
+    
+    # Save it in a BytesIO object
+    img_io = BytesIO()
+    qr.save(img_io, 'PNG')
+    img_io.seek(0)
+    
+    # Return the file as an InMemoryUploadedFile (so it can be saved directly in the model)
+    return InMemoryUploadedFile(img_io, None, 'patient_qr.png', 'image/png', img_io.getbuffer().nbytes, None)
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
@@ -56,7 +71,15 @@ def search_dossier_patient(request, num_securite_sociale):
 def signup(request):
     if request.method == "POST":
         data = json.loads(request.body)
-        
+       
+
+# Get current date
+        current_date = datetime.now()
+
+# Format date as YYYY-MM-DD
+        formatted_date = current_date.strftime("%Y-%m-%d")
+
+# Outputs: e.g., "2025-01-04"
         # Extract user information from request
         username = data.get('username')
         password = data.get('password')
@@ -83,12 +106,19 @@ def signup(request):
             date_naissance = data.get('date_naissance')
             adress = data.get('adress')
             telephone = data.get('telephone')
-            medecin_traitant_id = data.get('medecin_traitant')  # This should be a Medecin ID
+            nom_medecin = data.get("nom_medecin")
+            prenom_medecin = data.get("prenom_medecin") # This should be a Medecin ID
+             # You can use patient NSS or any unique ID here
+           
+            try:
+                medecin_traitant = Medecin.objects.get(nom=nom_medecin, prenom=prenom_medecin)
+            except Medecin.DoesNotExist:
+                 return JsonResponse({'status': 'error', 'message': 'medecin doesnt exist.'})
             
-            if not num_securite_sociale or not nom or not prenom or not date_naissance or not adress or not telephone or not medecin_traitant_id:
+            if not num_securite_sociale or not nom or not prenom or not date_naissance or not adress or not telephone or not medecin_traitant:
                 return JsonResponse({'status': 'error', 'message': 'All patient details are required.'})
             
-            medecin_traitant = Medecin.objects.get(id=medecin_traitant_id)
+           
             patient = Patient.objects.create(
                 user=user,
                 num_securite_sociale=num_securite_sociale,
@@ -100,6 +130,14 @@ def signup(request):
                 medecin_traitant=medecin_traitant,
                 personne_contact=data.get('personne_contact')
             )
+            
+            dpi = DossierPatient.objects.create(
+                date_creation = formatted_date,
+                num_securite_sociale = num_securite_sociale
+
+            )
+            qr_code_image = generate_patient_qr_code(num_securite_sociale) 
+            dpi.qr_code.save(f'{num_securite_sociale}_qr.png', qr_code_image, save=True)
             return JsonResponse({'status': 'success', 'message': 'Patient account created successfully.'})
 
         elif role == 'medecin':
@@ -125,8 +163,8 @@ def signup(request):
             return JsonResponse({'status': 'success', 'message': 'Infirmier account created successfully.'})
 
         elif role == 'laborantin':
-            nom = data.get('nom')
-            prenom = data.get('prenom')
+            nom = data.get('last_name')
+            prenom = data.get('first_name')
             email = data.get('email')
             
             if not nom or not prenom or not email:
@@ -136,8 +174,8 @@ def signup(request):
             return JsonResponse({'status': 'success', 'message': 'Laborantin account created successfully.'})
 
         elif role == 'radiologue':
-            nom = data.get('nom')
-            prenom = data.get('prenom')
+            nom = data.get('last_name')
+            prenom = data.get('first_name')
             email = data.get('email')
             
             if not nom or not prenom or not email:
@@ -156,7 +194,140 @@ def signup(request):
         return JsonResponse({'status': 'success', 'message': 'User created successfully.', 'access_token': access_token})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method. Use POST.'})
+@csrf_exempt
+def get_ordonnances_by_consultation(request):
+    if request.method == "POST":
+        try:
+            # Parse the request body (JSON data)
+            data = json.loads(request.body)
+            
+            # Get the consultation_id from the request data
+            consultation_id = data.get('consultation_id')
 
+            if not consultation_id:
+                return JsonResponse({"status": "error", "message": "consultation_id is required."}, status=400)
+            
+            # Get all Ordonnances related to the given consultation_id
+            ordonnances = Ordonnance.objects.filter(consultation_id=consultation_id)
+
+            # Prepare the response data
+            result = []
+
+            for ordonnance in ordonnances:
+                # Get all OrdonnanceMedicament relationships for each Ordonnance
+                ordonnance_medicaments = OrdonnanceMedicament.objects.filter(ordonnance_id=ordonnance.id)
+
+                # Prepare list of medicaments for the current ordonnance
+                medicaments = []
+                for ordonnance_medicament in ordonnance_medicaments:
+                    medicament = Medicament.objects.get(id=ordonnance_medicament.medicament_id)
+                    medicaments.append({
+                        "nom": medicament.nom,
+                        "dosage": medicament.dosage,
+                        "voie_administration": medicament.voie_administration
+                    })
+
+                # Append ordonnance data with its related medicaments
+                result.append({
+                    "ordonnance_id": ordonnance.id,
+                    "date": ordonnance.date,
+                    "duree": ordonnance.duree,
+                    "validated": ordonnance.validated,
+                    "medicaments": medicaments
+                })
+
+            # Return the response as JSON
+            return JsonResponse({"status": "success", "data": result}, safe=False)
+
+        except Exception as e:
+            # Handle errors and return appropriate response
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    else:
+        return JsonResponse({"status": "error", "message": "Only POST method is allowed."}, status=405)
+@csrf_exempt
+def create_medicament(request):
+    if request.method == 'POST':
+        # Parse the incoming request data
+        data = json.loads(request.body)
+
+        # Extract the fields from the request
+        nom = data.get('nom')
+        dosage = data.get('dosage')
+        voie_administration = data.get('voie_administration')
+        ordonnance_id = data.get('ordonnance_id')  # Get the ordonnance ID to link with medicament
+
+        # Ensure all necessary fields are provided
+        if not nom or not dosage or not voie_administration or not ordonnance_id:
+            return JsonResponse({'status': 'error', 'message': 'Nom, dosage, voie_administration, and ordonnance_id are required.'})
+
+        # Check if the Ordonnance exists
+        try:
+            ordonnance = Ordonnance.objects.get(id=ordonnance_id)
+        except Ordonnance.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Ordonnance with this ID does not exist.'})
+
+        # Create the Medicament
+        medicament = Medicament.objects.create(
+            nom=nom,
+            dosage=dosage,
+            voie_administration=voie_administration
+        )
+
+        # Create the OrdonnanceMedicament relationship
+        ordonnance_medicament = OrdonnanceMedicament.objects.create(
+            ordonnance_id=ordonnance_id,
+            medicament_id=medicament.id
+        )
+
+        # Return a success response
+        return JsonResponse({'status': 'success', 'message': 'Medicament created and linked to ordonnance successfully.', 'medicament_id': medicament.id})
+
+    return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed.'})
+@csrf_exempt  # Exempt CSRF check for this view (ensure to handle CSRF properly in production)
+def create_ordonnance(request):
+    if request.method == "POST":
+        try:
+            # Parse incoming JSON data
+            data = json.loads(request.body)
+
+            # Extract fields from the JSON payload
+            date = data.get('date')  # The date the ordonnance was created (format: 'YYYY-MM-DD')
+            duree = data.get('duree')  # The duration of the ordonnance (e.g., '1 month')
+            consultation_id = data.get('consultation_id')  # The consultation ID linked to this ordonnance
+            validated = data.get('validated', False)  # Whether the ordonnance is validated (default False)
+
+            # Ensure all required fields are present
+            if not date or not duree or not consultation_id:
+                return JsonResponse({'status': 'error', 'message': 'Date, Duree, and Consultation ID are required.'})
+
+            # Create and save the Ordonnance object
+            ordonnance = Ordonnance.objects.create(
+                date=date,  # The date when ordonnance is created
+                duree=duree,  # The duration of the ordonnance (e.g., "1 month")
+                consultation_id=consultation_id,  # Consultation ID
+                validated=validated  # Whether the ordonnance is validated
+            )
+
+            # Return success response with created ordonnance data
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Ordonnance created successfully.',
+                'data': {
+                    'id': ordonnance.id,
+                    'date': ordonnance.date,
+                    'duree': ordonnance.duree,
+                    'consultation_id': ordonnance.consultation_id,
+                    'validated': ordonnance.validated
+                }
+            })
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed.'})
 @csrf_exempt 
 # Creer dossier patient
 @require_http_methods(["POST"])
@@ -367,6 +538,69 @@ def radiologue_destroy(request, id):
         return JsonResponse({'message': 'Radiologue deleted'}, status=200)
     except Radiologue.DoesNotExist:
         return JsonResponse({'error': 'Radiologue not found'}, status=404)
+@csrf_exempt
+def get_dossier_by_nss(request):
+    if request.method == 'POST':
+        try:
+            # Load the request body
+            data = json.loads(request.body)
+
+            # Extract NSS from the request body
+            nss = data.get('nss')
+
+            # Check if NSS is provided
+            if not nss:
+                return JsonResponse({'error': 'NSS is required'}, status=400)
+
+            # Find the patient by NSS (assuming NSS is unique)
+            dossier = DossierPatient.objects.filter(num_securite_sociale=nss).first()
+
+            # Check if patient is found
+            if not dossier:
+                return JsonResponse({'error': 'Patient not found'}, status=404)
+
+            # Return the dossier_id (assuming the dossier_id is the NSS)
+            return JsonResponse({'dossier_id': dossier.id}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+@csrf_exempt
+def get_consultations_by_dossier_id(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method. Only POST is supported.'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        dossier_id = data.get('dossier_id')
+
+        if not dossier_id:
+            return JsonResponse({'error': 'Dossier ID is required.'}, status=400)
+        
+        consultations = Consultation.objects.filter(dossier_id=dossier_id)
+        
+        if not consultations.exists():
+            return JsonResponse({'error': 'No consultations found for the given dossier ID.'}, status=404)
+        
+        consultations_data = [
+            {
+                'id': consultation.id,
+                'motif': consultation.motif,
+                'date': consultation.date,
+                'resume': consultation.resume,
+                'medecin_id': consultation.medecin_id,
+            }
+            for consultation in consultations
+        ]
+        
+        return JsonResponse({'consultations': consultations_data}, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON format.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 # Creat cosultation 
 @csrf_exempt
 def create_consultation(request):
@@ -529,7 +763,164 @@ def ordonnance_destroy(request, id):
         return JsonResponse({'message': 'Ordonnance deleted'}, status=200)
     except Ordonnance.DoesNotExist:
         return JsonResponse({'error': 'Ordonnance not found'}, status=404)
+@csrf_exempt
 
+def create_examen_biologique(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            interpretations=data.get('interpretations')
+            # Extract data
+            type = data.get('type')
+            date = data.get('date')
+            resultat = data.get('resultat')
+            consultation_id = data.get('consultation_id')
+            parametres = data.get('parametres')
+            valeurs = data.get('valeurs')
+            graphique_tendance = data.get('graphique_tendance')
+            laborantin_id = data.get('laborantin_id')
+
+            if not all([type, date, resultat, consultation_id, parametres, valeurs, graphique_tendance, laborantin_id]):
+                return JsonResponse({'error': 'All fields are required'}, status=400)
+
+           
+            # Create ExBiologique
+            examen_biologique = ExBiologique.objects.create(
+                type=type,
+                date=date,
+                interpretations=interpretations,
+                resultat=resultat,
+                consultation_id=consultation_id,
+                parametres=parametres,
+                valeurs=valeurs,
+                graphique_tendance=graphique_tendance,
+                laborantin_id=laborantin_id
+            )
+
+            return JsonResponse({'message': 'Examen Biologique created successfully'}, status=201)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+@csrf_exempt  
+def create_examen_radiologique(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            date = data.get('date')
+            resultat = data.get('resultat')
+            type = data.get('type')
+            consultation_id = data.get('consultation_id')
+            type_image = data.get('type_image')
+            fichier_image = data.get('fichier_image')
+            compte_rendu = data.get('compte_rendu')
+            radiologue_id = data.get('radiologue_id')
+
+            if not all([consultation_id, type_image, fichier_image, compte_rendu, radiologue_id]):
+                return JsonResponse({'error': 'All fields are required'}, status=400)
+
+        
+
+            # Create ExRadiologique
+            examen_radiologique = ExRadiologique.objects.create(
+                resultat=resultat,
+                type=type,
+                consultation_id=consultation_id,
+                date=date,
+                type_image=type_image,
+                fichier_image=fichier_image,
+                compte_rendu=compte_rendu,
+                radiologue_id=radiologue_id
+            )
+
+            return JsonResponse({
+                'message': 'Examen Radiologique created successfully',
+                'examen': {
+                   
+                    'type': examen_radiologique.type,
+                    'date': examen_radiologique.date,
+                    'type_image': examen_radiologique.type_image,
+                    'fichier_image': examen_radiologique.fichier_image,
+                    'compte_rendu': examen_radiologique.compte_rendu
+                }
+            }, status=201)
+
+        except Consultation.DoesNotExist:
+            return JsonResponse({'error': 'Consultation not found'}, status=404)
+        except Radiologue.DoesNotExist:
+            return JsonResponse({'error': 'Radiologue not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def get_examen_biologique(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            consultation_id = data.get('consultation_id')
+
+            if not consultation_id:
+                return JsonResponse({"status": "error", "message": "consultation_id is required."}, status=400)
+
+            examens_biologiques = ExBiologique.objects.filter(consultation_id=consultation_id)
+            
+            # Serialize the results
+            examens_data = [
+                {
+                    "id": examen.id,
+                    "type": examen.type,
+                    "date": examen.date,
+                    "resultat": examen.resultat,
+                    "consultation_id": examen.consultation_id,
+                    "parametres": examen.parametres,
+                    "valeurs": examen.valeurs,
+                    "graphique_tendance": examen.graphique_tendance,
+                    "laborantin_id": examen.laborantin_id,
+                    "laborantin_nom": Laborantin.objects.get(id=examen.laborantin_id).nom,
+                    "laborantin_prenom": Laborantin.objects.get(id=examen.laborantin_id).prenom,
+                }
+                for examen in examens_biologiques
+            ]
+            return JsonResponse({"status": "success", "data": examens_data}, status=200)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid request method."}, status=405)
+@csrf_exempt
+def get_examen_radiologique(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            consultation_id = data.get('consultation_id')
+
+            if not consultation_id:
+                return JsonResponse({"status": "error", "message": "consultation_id is required."}, status=400)
+
+            examens_radiologiques = ExRadiologique.objects.filter(consultation_id=consultation_id)
+            
+            # Serialize the results
+            examens_data = [
+                {
+                    "id": examen.id,
+                    "type": examen.type,
+                    "date": examen.date,
+                    "resultat": examen.resultat,
+                    "consultation_id": examen.consultation_id,
+                    "type_image": examen.type_image,
+                    "fichier_image": examen.fichier_image,
+                    "compte_rendu": examen.compte_rendu,
+                    "radiologue_id": examen.radiologue_id,
+                    "radiologue_nom": Radiologue.objects.get(id=examen.laborantin_id).nom,
+                    "radiologue_prenom": Radiologue.objects.get(id=examen.laborantin_id).prenom,
+                }
+                for examen in examens_radiologiques
+            ]
+            return JsonResponse({"status": "success", "data": examens_data}, status=200)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid request method."}, status=405)
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -733,22 +1124,22 @@ def authentification(request):
                 return JsonResponse({'status': 'error', 'message': 'Invalid credentials'})
         elif role == 'medecin':
             try:
-                user = Medecin.objects.get(user__email=username).user
+                user = Medecin.objects.get(email=username).user
             except Medecin.DoesNotExist:
                 return JsonResponse({'status': 'error', 'message': 'Invalid credentials'})
         elif role == 'infirmier':
             try:
-                user = Infirmier.objects.get(user__email=username).user
+                user = Infirmier.objects.get(num_securite_sociale=username).user
             except Infirmier.DoesNotExist:
                 return JsonResponse({'status': 'error', 'message': 'Invalid credentials'})
         elif role == 'laborantin':
             try:
-                user = Laborantin.objects.get(user__email=username).user
+                user = Laborantin.objects.get(email=username).user
             except Laborantin.DoesNotExist:
                 return JsonResponse({'status': 'error', 'message': 'Invalid credentials'})
         elif role == 'radiologue':
             try:
-                user = Radiologue.objects.get(user__email=username).user
+                user = Radiologue.objects.get(num_securite_sociale=username).user
             except Radiologue.DoesNotExist:
                 return JsonResponse({'status': 'error', 'message': 'Invalid credentials'})
 
@@ -767,8 +1158,87 @@ def authentification(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid credentials'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+@csrf_exempt
+def get_medecin(request):
+    # Ensure it's a GET request and both 'nom' and 'prenom' are provided
+    if request.method == "GET":
+        # Get the 'nom' and 'prenom' from the request's query parameters
+        nom = request.GET.get('nom')
+        prenom = request.GET.get('prenom')
 
+        # Check if both 'nom' and 'prenom' are provided
+        if not nom or not prenom:
+            return JsonResponse({'status': 'error', 'message': 'Both "nom" and "prenom" are required.'})
 
+        try:
+            # Retrieve Medecin object based on 'nom' and 'prenom'
+            medecin = Medecin.objects.get(nom=nom, prenom=prenom)
+
+            # Return the medecin's details in the response
+            medecin_data = {
+                'id': medecin.id,
+                'nom': medecin.nom,
+                'prenom': medecin.prenom,
+                'email': medecin.email
+            }
+            return JsonResponse({'status': 'success', 'medecin': medecin_data})
+
+        except Medecin.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Medecin not found.'})
+    
+@csrf_exempt
+def get_patient_by_id(request):
+    if request.method == 'POST':
+        try:
+            # Parse the JSON body
+            data = json.loads(request.body)
+            idd = data.get('user_id')
+
+            if not idd:
+                return JsonResponse({'error': 'NSS is required'}, status=400)
+
+            # Try to find the Patient object
+            try:
+                patient = Patient.objects.get(user_id=idd)
+            except Patient.DoesNotExist:
+                return JsonResponse({'error': 'Patient not found'}, status=404)
+
+            # Prepare the response data
+            patient_data = {
+                'id': patient.id,
+                'nom': patient.nom,
+                'prenom': patient.prenom,
+                'num_securite_sociale': patient.num_securite_sociale,
+                'date_naissance': patient.date_naissance,
+                'adress': patient.adress,
+                'telephone': patient.telephone,
+                'medecin_traitant': f"{patient.medecin_traitant.nom} {patient.medecin_traitant.prenom}" if patient.medecin_traitant else None,
+                'personne_contact': patient.personne_contact,
+            }
+
+            # Return the patient details
+            return JsonResponse({'patient': patient_data})
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+    else:
+        # Return an error for unsupported request methods
+        return JsonResponse({'error': 'Invalid request method. Only POST is supported.'}, status=405)
+def get_medecin_patients(request):
+    user = request.user  # Logged-in user
+
+    # Check if the user has a related Medecin object
+    if hasattr(user, 'medecin'):
+        medecin = user.medecin
+        patients = medecin.patients_set.all()  # Get all patients associated with this Medecin
+        
+        # Prepare the patient data to return
+        patient_list = [
+            {'nom': patient.nom, 'prenom': patient.prenom, 'num_securite_sociale': patient.num_securite_sociale}
+            for patient in patients
+        ]
+        return JsonResponse({'status': 'success', 'patients': patient_list})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'This user is not a Medecin.'})
 def home(request):
     return render(request, 'home.html')
 
@@ -828,13 +1298,13 @@ class AddOrdonnanceView(CreateAPIView):
     queryset = Ordonnance.objects.all()
     serializer_class =  OrdonnanceSerializer
 
-class RequestExamenRadiologiqueView(CreateAPIView):
-    queryset = ExamenRadiologique.objects.all()
-    serializer_class = ExamenSerializer
+class RequestExRadiologiqueView(CreateAPIView):
+    queryset = ExRadiologique.objects.all()
+    serializer_class = ExamenRadiologiqueSerializer
 
-class RequestExamenBiologiqueView(CreateAPIView):
-    queryset = ExamenBiologique.objects.all()
-    serializer_class = ExamenSerializer
+class RequestExBiologiqueView(CreateAPIView):
+    queryset = ExBiologique.objects.all()
+    serializer_class = ExamenBiologiqueSerializer
 class UpdateConsultationView(UpdateAPIView):
     queryset = Consultation.objects.all()
     serializer_class = ConsultationSerializer
@@ -847,24 +1317,24 @@ class ListOrdonnanceView(ListAPIView):
     queryset = Ordonnance.objects.all()
     serializer_class = OrdonnanceSerializer
 
-class ListExamenRadiologiqueView(ListAPIView):
-    queryset = ExamenRadiologique.objects.all()
+class ListExRadiologiqueView(ListAPIView):
+    queryset = ExRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
-class ListExamenBiologiqueView(ListAPIView):
-    queryset = ExamenBiologique.objects.all()
+class ListExBiologiqueView(ListAPIView):
+    queryset = ExBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
 class DeleteOrdonnanceView(DestroyAPIView):
     queryset = Ordonnance.objects.all()
     serializer_class = OrdonnanceSerializer
 
-class DeleteExamenRadiologiqueView(DestroyAPIView):
-    queryset = ExamenRadiologique.objects.all()
+class DeleteExRadiologiqueView(DestroyAPIView):
+    queryset = ExRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
-class DeleteExamenBiologiqueView(DestroyAPIView):
-    queryset = ExamenBiologique.objects.all()
+class DeleteExBiologiqueView(DestroyAPIView):
+    queryset = ExBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
 class DeleteConsultationView(DestroyAPIView):
@@ -872,37 +1342,37 @@ class DeleteConsultationView(DestroyAPIView):
     serializer_class = ConsultationSerializer
 
 
-class ListExamenRadiologiqueView(ListAPIView):
-    queryset = ExamenRadiologique.objects.all()
+class ListExRadiologiqueView(ListAPIView):
+    queryset = ExRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
-class CreateExamenRadiologiqueView(CreateAPIView):
-    queryset = ExamenRadiologique.objects.all()
+class CreateExRadiologiqueView(CreateAPIView):
+    queryset = ExRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
-class UpdateExamenRadiologiqueView(UpdateAPIView):
-    queryset = ExamenRadiologique.objects.all()
+class UpdateExRadiologiqueView(UpdateAPIView):
+    queryset = ExRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
-class DeleteExamenRadiologiqueView(DestroyAPIView):
-    queryset = ExamenRadiologique.objects.all()
+class DeleteExRadiologiqueView(DestroyAPIView):
+    queryset = ExRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
 
-class ListExamenBiologiqueView(ListAPIView):
-    queryset = ExamenBiologique.objects.all()
+class ListExBiologiqueView(ListAPIView):
+    queryset = ExBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
-class CreateExamenBiologiqueView(CreateAPIView):
-    queryset = ExamenBiologique.objects.all()
+class CreateExBiologiqueView(CreateAPIView):
+    queryset = ExBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
-class UpdateExamenBiologiqueView(UpdateAPIView):
-    queryset = ExamenBiologique.objects.all()
+class UpdateExBiologiqueView(UpdateAPIView):
+    queryset = ExBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
-class DeleteExamenBiologiqueView(DestroyAPIView):
-    queryset = ExamenBiologique.objects.all()
+class DeleteExBiologiqueView(DestroyAPIView):
+    queryset = ExBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
 class ListInfirmierView(ListAPIView):
@@ -1111,13 +1581,13 @@ class PatientDetailView(RetrieveAPIView):
     serializer_class = PatientSerializer
     queryset = Patient.objects.all()
 
-class ExamenRadiologiqueDetailView(RetrieveAPIView):
+class ExRadiologiqueDetailView(RetrieveAPIView):
     serializer_class = ExamenRadiologiqueSerializer
-    queryset = ExamenRadiologique.objects.all()
+    queryset = ExRadiologique.objects.all()
 
-class ExamenBiologiqueDetailView(RetrieveAPIView):
+class ExBiologiqueDetailView(RetrieveAPIView):
     serializer_class = ExamenBiologiqueSerializer
-    queryset = ExamenBiologique.objects.all()
+    queryset = ExBiologique.objects.all()
 
 
 class OrdonnanceListView(ListAPIView):
@@ -1153,7 +1623,7 @@ class UpdateOrdonnanceView(UpdateAPIView):
     serializer_class = OrdonnanceSerializer
 
 class MedicalExamListView(ListAPIView):
-    serializer_class = ExamenSerializer
+    serializer_class = ExamenBiologiqueSerializer
 
     def get_queryset(self):
         """
@@ -1161,9 +1631,9 @@ class MedicalExamListView(ListAPIView):
         for the currently authenticated user.
         """
         user = self.request.user
-        return Examen.objects.filter(medecin=user)
-class UpdateExamenRadiologiqueView(UpdateAPIView):
-    queryset = ExamenRadiologique.objects.all()
+        return ExBiologique.objects.filter(medecin=user)
+class UpdateExRadiologiqueView(UpdateAPIView):
+    queryset = ExRadiologique.objects.all()
     serializer_class = ExamenRadiologiqueSerializer
 
     def get_queryset(self):
@@ -1172,10 +1642,10 @@ class UpdateExamenRadiologiqueView(UpdateAPIView):
         for the currently authenticated user's consultation.
         """
         user = self.request.user
-        return ExamenRadiologique.objects.filter(consultation__medecin=user)
+        return ExRadiologique.objects.filter(consultation__medecin=user)
 
-class UpdateExamenBiologiqueView(UpdateAPIView):
-    queryset = ExamenBiologique.objects.all()
+class UpdateExBiologiqueView(UpdateAPIView):
+    queryset = ExBiologique.objects.all()
     serializer_class = ExamenBiologiqueSerializer
 
     def get_queryset(self):
@@ -1184,9 +1654,9 @@ class UpdateExamenBiologiqueView(UpdateAPIView):
         for the currently authenticated user's consultation.
         """
         user = self.request.user
-        return ExamenBiologique.objects.filter(consultation__medecin=user)
+        return ExBiologique.objects.filter(consultation__medecin=user)
     
-class ExamenRadiologiqueListView(ListAPIView):
+class ExRadiologiqueListView(ListAPIView):
     serializer_class = ExamenRadiologiqueSerializer
 
     def get_queryset(self):
@@ -1195,8 +1665,8 @@ class ExamenRadiologiqueListView(ListAPIView):
         for the currently authenticated user.
         """
         user = self.request.user
-        return ExamenRadiologique.objects.filter(radiologue=user)
-class ExamenBiologiqueListView(ListAPIView):
+        return ExRadiologique.objects.filter(radiologue=user)
+class ExBiologiqueListView(ListAPIView):
     serializer_class = ExamenBiologiqueSerializer
 
     def get_queryset(self):
@@ -1205,7 +1675,7 @@ class ExamenBiologiqueListView(ListAPIView):
         for the currently authenticated user.
         """
         user = self.request.user
-        return ExamenBiologique.objects.filter(laborantin=user)
+        return ExBiologique.objects.filter(laborantin=user)
 
 class CompteRenduListView(ListAPIView):
     serializer_class = CompteRenduSerializer
