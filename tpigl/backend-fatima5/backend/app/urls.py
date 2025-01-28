@@ -15,6 +15,8 @@ urlpatterns = [
     path('patients/', views.patient_list, name='patient_list'),  # List patients
     path('patients/<int:id>/', views.patient_detail, name='patient_detail'),  # Patient details by ID
     path('patients/<int:id>/delete/', views.patient_destroy, name='patient_delete'),
+     path('patientGetByIdDossier/<int:id>/', views.get_patient, name='patient_get'),  # List patients
+    path('patientNameGetByIdDossier/<int:id>/', views.get_patient_name, name='patient_get'),  # List patients
     path('getpatients/', views.get_patient_by_id, name='get_patient_by_nss'),  # List patients
     # Medecins
     path('get-medecin/', views.get_medecin, name='get_medecin'),
@@ -90,17 +92,31 @@ urlpatterns = [
 
     # Soins
     path('soins/', views.SoinListView.as_view(), name='soin_list'),
+    path('soins/create/', views.CreateSoinView.as_view(), name='soin_create'),
     path('soins/<int:pk>/', views.SoinDetailView.as_view(), name='soin_detail'),
     path('soins/<int:pk>/delete/', views.DeleteSoinView.as_view(), name='delete_soin'),
 
     # Dossier Patient Creation and Search
     path('create_dossier_patient/', views.create_dossier_patient, name='create_dossier_patient'),
     path('search_dossier_patient/<str:num_securite_sociale>/', views.search_dossier_patient, name='search_dossier_patient'),
-    path('examen/biologique/', views.create_examen_biologique, name='create_examen_biologique'),
-    path('examen/radiologique/', views.create_examen_radiologique, name='create_examen_radiologique'),
+    path('examens/biologiques/create/', views.create_examen_biologique, name='create_examen_biologique'),
+    path('examens/radiologiques/create/', views.create_examen_radiologique, name='create_examen_radiologique'),
     # Consultation and Ordonnance Creation
     path('create_ordonnance/<str:consultation_id>/', views.create_ordonnance, name='create_ordonnance'),
     path('create_consultation/', views.create_consultation, name='create_consultation'),
     path('getbiologique/', views.get_examen_biologique, name='get_examen_biologique'),
     path('getradiologique/', views.get_examen_radiologique, name='get_examen_radiologique'),
+
+    path('medecin/patients/', views.get_medecin_patients, name='medecin_patients'),
+    path('search_dossier_patient_by_id/<int:patient_id>/', views.search_dossier_patient_by_id, name='search_dossier_patient_by_id'),
+    path('patients/<str:dossier_id>/consultations/', views.consultations_by_patient, name='consultations_by_patient'),
+    path('patients/<str:dossier_id>/consultations/create/', views.create_consultation, name='create_consultation'),
+    path('medecin/ordonnance/add/<int:consultation_id>/', views.create_ordonnance, name='add_ordonnance'),
+    path('medecin/antecedent/create/<int:dossier_id>/', views.create_antecedent, name='delete_ordonnance'),
+    path('medecin/bilan-biologique/create/<str:consultation_id>/<str:dossier_id>/', views.create_bilan_biologique, name='create_bilan_biologique'),
+    path('medecin/bilan-radiologique/create/<str:consultation_id>/<str:dossier_id>/', views.create_bilan_radiologique, name='create_bilan_radiologique'),
+    path('patients/<int:dossier_id>/list_ordonnances/', views.list_ordonnances, name='list_ordonnances'), # touts les ordonnance liées a ce dossier patient
+    path('ordonnance/<int:id_ordonnance>/medicaments/', views.get_medicaments_by_ordonnance, name='get_medicaments_by_ordonnance'),
+    path('patient/soins/<str:dossier_id>/', views.get_soins_by_dossier, name='get_soins_by_dossier'),
+    path('examens/biologiques/', views.ExamenBiologiqueListView.as_view(), name='examen_biologique_list'),
 ]
